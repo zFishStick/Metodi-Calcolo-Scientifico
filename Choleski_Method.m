@@ -1,8 +1,12 @@
 
-folder = "matrici";
+
+folder = "C:/Projects/matrici_mcs";
 matrix_names = {'ex15.mat', 'shallow_water1.mat', 'Flan_1565.mat'};
+
+% Queste righe scaricano la matrice da internet (Edge non me le fa
+% scaricare perchè le vede poco sicure...
 url = 'https://suitesparse-collection-website.herokuapp.com/mat/MaxPlanck/shallow_water1.mat';
-filename = 'matrici/shallow_water1.mat';
+filename = 'C:/Projects/matrici_mcs/shallow_water1.mat';
 
 websave(filename, url)
 
