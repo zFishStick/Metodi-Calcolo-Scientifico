@@ -1,0 +1,2 @@
+Matrix<{float}, Dyn, Dyn, ViewStorage<'_, {float}, Dyn, Dyn, Const<1>, Dyn>>: From<Matrix<{float}, Dyn, Dyn, VecStorage<{float}, Dyn, Dyn>>>
+Matrix<{float}, Dyn, Dyn, VecStorage<{float}, Dyn, Dyn>>: Into<Matrix<{float}, Dyn, Dyn, ViewStorage<'_, {float}, Dyn, Dyn, Const<1>, Dyn>>>
