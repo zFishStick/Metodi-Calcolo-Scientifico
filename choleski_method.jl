@@ -3,9 +3,9 @@ using LinearAlgebra
 using SparseArrays, MAT
 
 
-function cholesky_decomposition(A::Matrix{Float64}, b::Vector{Float64} = Float64[])
+function cholesky_decomposition()
 
-    folder = "matrici\\"
+    folder = "C:\\Users\\Diagon\\Desktop\\UNIMIB\\ANNO 1\\SECONDO SEMESTRE\\Metodi Calcolo\\Matrici-Sparse"
     files = readdir(folder)
     matrici = []
     for f in files
@@ -19,6 +19,7 @@ function cholesky_decomposition(A::Matrix{Float64}, b::Vector{Float64} = Float64
             error("La matrice deve essere simmetrica.")
         end
 
+        println("Matrice: ", A.name)
         # Controllo se la matrice è definita positiva, inutile perchè la sua descrizione è
         # "Test whether a matrix is positive definite (and Hermitian) by trying to perform a Cholesky factorization of A."
         # if !(isposdef(A))
@@ -29,10 +30,12 @@ function cholesky_decomposition(A::Matrix{Float64}, b::Vector{Float64} = Float64
         xe = ones(size(A, 1))
         
         b = A * xe
-       
-        x = A \ b
 
-        println("errore: ", norm(x-xe))/norm(xe)
+        f = cholesky(A)
+
+        x = f \ b
+
+        println("errore: ", norm(x-xe)/norm(xe))
 
     end
 
@@ -41,4 +44,4 @@ end
 
 A = [4.0 10.0 8.0; 10.0 26.0 26.0; 8.0 26.0 61.0]
 
-cholesky_decomposition(A, b) 
+cholesky_decomposition() 
