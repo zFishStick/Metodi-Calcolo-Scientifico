@@ -32,12 +32,13 @@ function cholesky_decomposition(A::Matrix{Float64}, b::Vector{Float64} = Float64
        
         x = A \ b
 
-        println("Soluzione: ", x)
+        println("errore: ", norm(x-xe))/norm(xe)
+
     end
 
-    return x
+    return 
 end
 
 A = [4.0 10.0 8.0; 10.0 26.0 26.0; 8.0 26.0 61.0]
 
-L = cholesky_decomposition(A, b) # La funzione funzia
+cholesky_decomposition(A, b) 
