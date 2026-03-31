@@ -3,10 +3,6 @@
 folder = "C:\Users\Diagon\Desktop\UNIMIB\ANNO 1\SECONDO SEMESTRE\Metodi Calcolo\Matrici-Sparse";
 matrix_names = {'ex15.mat', 'apache2.mat', 'cfd1.mat', 'cfd2.mat', 'Flan_1565.mat', 'G3_circuit.mat', 'parabolic_fem.mat', 'shallow_water1.mat', 'StocF-1465.mat'};
 
-% Queste righe scaricano la matrice da internet (Edge non me le fa
-% scaricare perchè le vede poco sicure...
-%url = 'https://suitesparse-collection-website.herokuapp.com/mat/MaxPlanck/shallow_water1.mat';
-%filename = 'C:/Projects/matrici_mcs/shallow_water1.mat';
 
 %websave(filename, url)
 
