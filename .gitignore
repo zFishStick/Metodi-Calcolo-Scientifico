@@ -1,0 +1,81 @@
+##################################
+# Rust
+##################################
+/target/
+**/*.rs.bk
+
+
+##################################
+# Julia
+##################################
+# Compiled files
+*.ji
+
+# Package environments
+Manifest.toml
+
+# Logs & history
+*.log
+repl_history.jl
+
+# Temporary files
+*.jl.cov
+*.jl.*.cov
+*.jl.mem
+
+##################################
+# MATLAB
+##################################
+# Autosave & backup
+*.asv
+*.m~
+*.autosave
+
+# Workspace
+*.mat
+
+# Simulink
+*.slxc
+*.slx.r*
+*.mdl.r*
+
+# Code generation
+codegen/
+slprj/
+
+# Temporary files
+*.mex*
+*.p
+
+##################################
+# General / OS / Editor
+##################################
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+ehthumbs.db
+
+# Linux
+*~
+
+# VS Code
+.vscode/
+
+# JetBrains
+.idea/
+
+# Logs
+*.log
+
+# Environment files
+.env
+
+# Build folders
+build/
+dist/
+
+# Temporary
+tmp/
+temp/
