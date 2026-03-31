@@ -2,7 +2,7 @@
 using LinearAlgebra
 
 
-function cholesky_decomposition(A::Matrix{Float64})
+function cholesky_decomposition(A::Matrix{Float64}, b::Vector{Float64} = [])
 
     # Controllo se la matrice è simmetrica
     if !(issymmetric(A))
@@ -18,7 +18,9 @@ function cholesky_decomposition(A::Matrix{Float64})
     # Soluzione esatta xe = [1,1,1,1...]
     xe = ones(size(A, 1))
 
-    b = A * xe
+    if isempty(b)
+        b = A * xe
+    end
 
     f = cholesky(A)
 
@@ -32,5 +34,8 @@ function cholesky_decomposition(A::Matrix{Float64})
         
 end
 
-A = [4.0 2.0; 2.0 3.0]
-L = cholesky_decomposition(A)
+A = [4.0 10.0 8.0; 10.0 26.0 26.0; 8.0 26.0 61.0]
+
+b = [44.0, 128.0, 214.0]
+
+L = cholesky_decomposition(A, b) # La funzione funzia

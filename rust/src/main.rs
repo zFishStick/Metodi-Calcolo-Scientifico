@@ -5,14 +5,6 @@ use nalgebra::{DMatrix, DVector};
 use nalgebra_sparse::{CooMatrix, CscMatrix, factorization::CscCholesky};
 
 fn main() {
-    // Vettore soluzione di solo 1
-    // let xe = DVector::from_element(matrix_a.ncols(), 1.0);
-
-    // let time = Instant::now();
-    // let x = cholesky_method(matrix_a, b);
-    // print!("x: {:?}\n", x);
-
-    // println!("Time: {} ms", time.elapsed().as_millis());
 
 }
 
