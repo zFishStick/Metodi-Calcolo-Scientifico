@@ -24,7 +24,6 @@ function cholesky_decomposition()
             error("La matrice deve essere simmetrica.")
         end
 
-        mem_prima = Base.gc_live_bytes() / 1024^2
 
         println("Matrice: ", A_name)
         # Controllo se la matrice è definita positiva, inutile perchè la sua descrizione è
@@ -35,21 +34,28 @@ function cholesky_decomposition()
 
         # Soluzione esatta xe = [1,1,1,1...]
         xe = ones(size(A, 1))
-        
+        mem_prima = Base.summarysize(A) / 1024^2
+        println("mem_prima :", mem_prima)
         b = A * xe
         t = @elapsed begin
-
+            
             f = cholesky(A)
             x = f \ b
-             mem_dopo = Base.gc_live_bytes() / 1024^2
 
         end
 
-        
+        s = unsafe_load(f.ptr)
+        println(fieldnames(typeof(s)))
 
+        mem_stimata = (s.xsize * sizeof(Float64) +  
+            s.ssize * sizeof(Int64)+ 
+            s.nsuper * sizeof(Int64) * 3) / 1024^2
+
+        println("Peso stimato:   ", round(mem_stimata, digits=3), " MB")
+        
         println("errore: ", norm(x-xe)/norm(xe))
         println("tempo di esecuzione: ", t, " s")
-        println("aumento di memoria: ", mem_dopo - mem_prima, " MB")
+        println("Memoria allocata: ", mem_stimata - mem_prima, " MB")
 
     end
 
