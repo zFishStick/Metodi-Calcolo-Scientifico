@@ -1,1 +1,0 @@
-Matrix<_, Dyn, Dyn, VecStorage<_, Dyn, Dyn>>: From<&Matrix<{float}, Dyn, Const<1>, VecStorage<{float}, Dyn, Const<1>>>>
