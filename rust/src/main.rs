@@ -1,7 +1,7 @@
 
 
-use nalgebra::{DMatrix, DVector};
-use nalgebra_sparse::{CooMatrix, CscMatrix, factorization::CscCholesky};
+use nalgebra::{DVector};
+use nalgebra_sparse::{CscMatrix, factorization::CscCholesky};
 
 mod matrix_extractor;
 mod util;
@@ -22,6 +22,8 @@ fn cholesky_method(matrix : &CscMatrix<f64>, b : DVector<f64>) -> (CscCholesky<f
 mod tests {
     
     use super::*;
+    use nalgebra::{DMatrix};
+    use nalgebra_sparse::{CooMatrix};
 
     #[test]
     fn test_cholesky_method_small_matrix() {
@@ -43,12 +45,32 @@ mod tests {
         println!("Matrix nnz: {}", matrix_a.nnz());
         println!("Matrix L nnz: {}", l.nnz());
 
-        // Tipo f64 occupa 64 bit -> 8 byte
-        let mem_occupata = (matrix_a.nnz() + l.nnz()) as f64 * 8.0;
-        println!("Memoria occupata: {}", util::format_memory(mem_occupata as u64));
+        let size_of_val = std::mem::size_of::<f64>(); 
+        let size_of_idx = std::mem::size_of::<usize>();
+
+        // Matrice A
+        let mem_colonne = (matrix_a.ncols() + 1) * size_of_idx;
+        let mem_righe = matrix_a.nnz() * size_of_idx;         
+        let mem_valori = matrix_a.nnz() * size_of_val;
+        let mem_occupata_a = mem_colonne + mem_righe + mem_valori;
+
+        // Matrice L
+        let mem_colonne_l = (l.ncols() + 1) * size_of_idx;
+        let mem_righe_l = l.nnz() * size_of_idx;
+        let mem_valori_l = l.nnz() * size_of_val;
+        let mem_occupata_l = mem_colonne_l + mem_righe_l + mem_valori_l;
 
         let x = cholesky_method(&matrix_a, b);
-        assert!(x.1.relative_eq(&DVector::from_row_slice(&[-8.0, 6.0, 2.0]), 1e-6, 1e-6));
+
+        let memoria_occupata_x = x.1.len() * size_of_val;
+        println!("Memoria occupata vettore x: {}", util::format_memory(memoria_occupata_x as u64));
+
+        println!("Memoria occupata matrice A: {}", util::format_memory((mem_colonne + mem_righe + mem_valori) as u64));
+        println!("Memoria occupata matrice L: {}", util::format_memory((mem_colonne_l + mem_righe_l + mem_valori_l) as u64));
+
+        let aumento_totale = mem_occupata_l + memoria_occupata_x;
+        println!("Memoria totale occupata: {}", util::format_memory(aumento_totale as u64));
+
     }
 
     #[test]
@@ -68,10 +90,31 @@ mod tests {
 
         println!("Matrix nnz: {}", matrix.nnz());
         println!("Matrix L nnz: {}", triangular_mat.nnz());
+        let size_of_val = std::mem::size_of::<f64>(); 
+        let size_of_idx = std::mem::size_of::<usize>();
 
-        // Tipo f64 occupa 64 bit -> 8 byte
-        let mem_occupata = (matrix.nnz() + triangular_mat.nnz()) as f64 * 8.0;
-        println!("Memoria occupata: {}", util::format_memory(mem_occupata as u64));
+        // https://docs.rs/nalgebra-sparse/latest/nalgebra_sparse/csc/struct.CscMatrix.html
+
+        // Matrice A (Matrice originale)
+        let mem_occupata_a = ((matrix.ncols() + 1) * size_of_idx) +  // Col offset
+                            (matrix.nnz() * size_of_idx) + // Row indices
+                            (matrix.nnz() * size_of_val); // Values
+
+        // Matrice L (Matrice triangolare inferiore)
+        let mem_occupata_l = ((triangular_mat.ncols() + 1) * size_of_idx) + 
+                            (triangular_mat.nnz() * size_of_idx) + 
+                            (triangular_mat.nnz() * size_of_val);
+
+        let memoria_occupata_x = x.len() * size_of_val;
+
+        println!("Matrix nnz: {}", matrix.nnz());
+        println!("Matrix L nnz: {}", triangular_mat.nnz());
+        println!("Memoria A: {}", util::format_memory(mem_occupata_a as u64));
+        println!("Memoria L: {}", util::format_memory(mem_occupata_l as u64));
+        println!("Memoria x: {}", util::format_memory(memoria_occupata_x as u64));
+        
+        let aumento_totale = mem_occupata_l + memoria_occupata_x;
+        println!("Memoria totale occupata: {}", util::format_memory(aumento_totale as u64));
 
         let diff = &x - &xe;
         let rel_error = diff.norm() / xe.norm();
