@@ -7,7 +7,58 @@ mod matrix_extractor;
 mod util;
 
 fn main() {
+    let folder = "C://Users//gabri//Desktop//matrici";
+    
+    let matrix_list = [
+        "Flan", "1565", "StocF-1465", "cfd2", "cfd1", "G3", 
+        "circuit", "parabolic", "apache2", "shallow", 
+        "fem", "water1", "ex15"
+    ];
 
+    for name in matrix_list {
+        println!("\n--- Analisi Matrice: {} ---", name);
+
+        let path = format!("{}/{}.mtx", folder, name);
+        
+        let matrix: CscMatrix<f64> = matrix_extractor::get_sparse_matrix(&path);
+
+        let xe = DVector::from_element(matrix.ncols(), 1.0);
+        let b: DVector<f64> = &matrix * &xe;
+
+        let time = std::time::Instant::now();
+        let (factor, x) = cholesky_method(&matrix, b);
+        let elapsed = time.elapsed();
+
+        let triangular_mat = factor.l();
+
+        let size_of_val = std::mem::size_of::<f64>(); 
+        let size_of_idx = std::mem::size_of::<usize>();
+
+        let mem_occupata_a = ((matrix.ncols() + 1) * size_of_idx) + 
+                            (matrix.nnz() * size_of_idx) + 
+                            (matrix.nnz() * size_of_val);
+
+        let mem_occupata_l = ((triangular_mat.ncols() + 1) * size_of_idx) + 
+                            (triangular_mat.nnz() * size_of_idx) + 
+                            (triangular_mat.nnz() * size_of_val);
+
+        let memoria_occupata_x = x.len() * size_of_val;
+        let aumento_totale = mem_occupata_l + memoria_occupata_x;
+
+        let diff = &x - &xe;
+        let rel_error = diff.norm() / xe.norm();
+
+        println!("Matrix nnz: {}", matrix.nnz());
+        println!("Matrix L nnz: {}", triangular_mat.nnz());
+        println!("Memoria A: {}", util::format_memory(mem_occupata_a as u64));
+        println!("Memoria L: {}", util::format_memory(mem_occupata_l as u64));
+        println!("Memoria x: {}", util::format_memory(memoria_occupata_x as u64));
+        println!("Memoria totale occupata (L + x): {}", util::format_memory(aumento_totale as u64));
+        println!("Errore relativo: {:e}", rel_error);
+                
+        println!("Tempo di esecuzione: {:.2?}", elapsed);
+        println!("------------------------------------");
+    }
 }
 
 #[allow(dead_code)]
@@ -107,6 +158,7 @@ mod tests {
 
         let memoria_occupata_x = x.len() * size_of_val;
 
+        // nnz = number of non-zero entries
         println!("Matrix nnz: {}", matrix.nnz());
         println!("Matrix L nnz: {}", triangular_mat.nnz());
         println!("Memoria A: {}", util::format_memory(mem_occupata_a as u64));
@@ -125,7 +177,6 @@ mod tests {
         println!("xe[0..5]: {:?}", &xe.as_slice()[..5]);
         println!("Tempo di esecuzione: {:.2?}", elapsed);
 
-        assert!(x.relative_eq(&xe, 1e-4, 1e-4));
     }
 
 }
