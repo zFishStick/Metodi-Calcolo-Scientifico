@@ -1,12 +1,12 @@
 # Decomposizione di Cholesky in Julia
 using LinearAlgebra
 using SparseArrays, MAT
-using Plots
+using CSV, DataFrames
 
 function cholesky_decomposition()
 
-    #folder = "C:\\Users\\Diagon\\Desktop\\UNIMIB\\ANNO 1\\SECONDO SEMESTRE\\Metodi Calcolo\\Matrici-Sparse"
-    folder = "matrici\\"
+    folder = "C:\\Users\\Diagon\\Desktop\\UNIMIB\\ANNO 1\\SECONDO SEMESTRE\\Metodi Calcolo\\Matrici-Sparse"
+    #folder = "matrici\\"
     files = readdir(folder)
     matrici = []
     dimensioni = []
@@ -17,6 +17,15 @@ function cholesky_decomposition()
         data = matread(joinpath(folder, f))
         push!(matrici, (data["Problem"]["A"], data["Problem"]["name"]))
     end
+
+
+    results = DataFrame(
+        nome = String[],
+        dimensione = Int[],
+        tempo = Float64[],
+        errore = Float64[],
+        memoria = Float64[]
+    )
 
     #ordino le matrici in base alla dimensione
     matrici = sort(matrici, by = m -> m[1].n)
@@ -60,20 +69,25 @@ function cholesky_decomposition()
             length(x) * sizeof(Int64)) / 1024^2
         )
 
-        errore = norm(x-xe)/norm(xe)
-        memoria_allocata = mem_stimata - mem_prima
-        push!(errori, errore)
-        push!(tempi, t)
-        push!(memorie, memoria_allocata)
-        println("Peso stimato:   ", round(mem_stimata, digits=3), " MB")
-        println("errore: ", errore)
-        println("tempo di esecuzione: ", t, " s")
-        println("Memoria allocata: ", memoria_allocata, " MB")
-
-       
+        err = norm(x-xe)/norm(xe)
+        #memoria_allocata = mem_stimata - mem_prima
+        #push!(errori, err)
+        #push!(tempi, t)
+        #push!(memorie, memoria_allocata)
+        
+        push!(results, (
+            A_name,
+            size(A,1),
+            t,
+            err,
+            mem_stimata - mem_prima
+        ))
    end
+    filename = Sys.iswindows() ? "risultati_win_julia.csv" : "risultati_linux_julia.csv"
+                             
+    CSV.write(filename, results)
 
-    
+    #=
     p1 = plot(dimensioni, errori,
         xlabel = "Dimensione matrice",
         ylabel = "Errore relativo",
@@ -105,6 +119,7 @@ function cholesky_decomposition()
     # Tutti e tre affiancati in un unico file
     plot(p1, p2, p3, layout=(1,3), size=(1200,400))
     savefig("risultati.png")
+    =#
     return
 end
 
