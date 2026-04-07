@@ -79,3 +79,6 @@ dist/
 # Temporary
 tmp/
 temp/
+
+# Plot png
+.png
