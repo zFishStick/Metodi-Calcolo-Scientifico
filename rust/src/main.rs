@@ -2,12 +2,69 @@
 
 use nalgebra::{DVector};
 use nalgebra_sparse::{CscMatrix, factorization::CscCholesky};
+use std::fs::File;
+use std::fs;
+use csv::Writer;
+
 
 mod matrix_extractor;
 mod util;
 
 fn main() {
+    let paths: Vec<_> = fs::read_dir("C:\\Users\\Diagon\\Desktop\\UNIMIB\\ANNO 1\\SECONDO SEMESTRE\\Metodi Calcolo\\Matrici-Sparse")
+        .unwrap()
+        .filter_map(|entry| {
+            let path = entry.unwrap().path();
+            if path.extension()? == "mtx" {
+                Some(path)
+            } else {
+                None
+            }
+        })
+        .collect();
 
+    for path in paths {
+
+        let matrix: CscMatrix<f64> = matrix_extractor::get_sparse_matrix(&path.to_string_lossy());
+
+        let xe = DVector::from_element(matrix.ncols(), 1.0);
+        let b = &matrix * &xe;
+
+        let time = std::time::Instant::now();
+        let (factor, x) = cholesky_method(&matrix, b);
+        let elapsed = time.elapsed();
+
+        let triangular_mat = factor.l();
+
+        let size_of_val = std::mem::size_of::<f64>(); 
+        let size_of_idx = std::mem::size_of::<usize>();
+
+        let mem_occupata_l = ((triangular_mat.ncols() + 1) * size_of_idx) + 
+                             (triangular_mat.nnz() * size_of_idx) + 
+                             (triangular_mat.nnz() * size_of_val);
+
+        let memoria_occupata_x = x.len() * size_of_val;
+
+        let memoria_mb = (mem_occupata_l + memoria_occupata_x) as f64 / (1024.0 * 1024.0);
+
+        let diff = &x - &xe;
+        let rel_error = diff.norm() / xe.norm();
+
+        let nome = std::path::Path::new(&path)
+            .file_stem()
+            .unwrap()
+            .to_str()
+            .unwrap();
+
+        write_results_csv(
+            "risultati_rust.csv",
+            nome,
+            matrix.ncols(),
+            elapsed.as_secs_f64(),
+            rel_error,
+            memoria_mb
+        );
+    }
 }
 
 #[allow(dead_code)]
@@ -15,6 +72,40 @@ fn cholesky_method(matrix : &CscMatrix<f64>, b : DVector<f64>) -> (CscCholesky<f
     let factor = CscCholesky::factor(&matrix).expect("La matrice non è simmetrica");
     let result = factor.solve(&b); // Ax = b
     (factor, DVector::from_vec(result.data.into()))
+}
+
+fn write_results_csv(
+    filename: &str,
+    nome: &str,
+    dimensione: usize,
+    tempo: f64,
+    errore: f64,
+    memoria: f64
+) {
+    let file_exists = std::path::Path::new(filename).exists();
+
+    let file = File::options()
+        .append(true)
+        .create(true)
+        .open(filename)
+        .unwrap();
+
+    let mut wtr = Writer::from_writer(file);
+
+    if !file_exists {
+        wtr.write_record(&["nome", "dimensione", "tempo", "errore", "memoria"])
+            .unwrap();
+    }
+
+    wtr.write_record(&[
+        nome,
+        &dimensione.to_string(),
+        &tempo.to_string(),
+        &errore.to_string(),
+        &memoria.to_string(),
+    ]).unwrap();
+
+    wtr.flush().unwrap();
 }
 
 // Test
@@ -126,6 +217,7 @@ mod tests {
         println!("Tempo di esecuzione: {:.2?}", elapsed);
 
         assert!(x.relative_eq(&xe, 1e-4, 1e-4));
+
     }
 
 }
