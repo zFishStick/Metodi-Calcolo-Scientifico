@@ -60,7 +60,6 @@ function cholesky_decomposition()
         end
 
         s = unsafe_load(f.ptr)
-        #println(fieldnames(typeof(s)))
 
         mem_stimata = (
             (s.xsize * sizeof(Float64) + 

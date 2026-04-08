@@ -1,7 +1,8 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 
-df = pd.read_csv("risultati_win_julia.csv")
+#df = pd.read_csv("risultati_win_julia.csv")
+df = pd.read_csv("risultati_win_matlab.csv")
 df = df.sort_values("dimensione")
 
 # TEMPO vs DIMENSIONE
