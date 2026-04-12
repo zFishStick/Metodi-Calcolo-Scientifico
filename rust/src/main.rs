@@ -11,20 +11,19 @@ mod matrix_extractor;
 mod util;
 
 fn main() {
-    let paths: Vec<_> = fs::read_dir("C:\\Users\\Diagon\\Desktop\\UNIMIB\\ANNO 1\\SECONDO SEMESTRE\\Metodi Calcolo\\Matrici-Sparse")
+    let paths: Vec<_> = fs::read_dir("C:\\Users\\Diagon\\Desktop\\UNIMIB\\ANNO 1\\SECONDO SEMESTRE\\Metodi Calcolo\\Matrici-mtx")
         .unwrap()
         .filter_map(|entry| {
-            let path = entry.unwrap().path();
-            if path.extension()? == "mtx" {
-                Some(path)
-            } else {
-                None
+            let path = entry.ok()?.path();
+
+            match path.extension().and_then(|s| s.to_str()) {
+                Some(ext) if ext.eq_ignore_ascii_case("mtx") => Some(path),
+                _ => None,
             }
         })
         .collect();
 
     for path in paths {
-
         let matrix: CscMatrix<f64> = matrix_extractor::get_sparse_matrix(&path.to_string_lossy());
 
         let xe = DVector::from_element(matrix.ncols(), 1.0);
