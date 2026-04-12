@@ -1,4 +1,5 @@
 
+#[allow(dead_code)]
 pub fn format_memory(bytes: u64) -> String {
     let units = ["B", "KB", "MB", "GB", "TB"]; 
     let mut size = bytes as f64;
