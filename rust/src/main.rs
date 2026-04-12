@@ -11,7 +11,7 @@ mod matrix_extractor;
 mod util;
 
 fn main() {
-    let paths: Vec<_> = fs::read_dir("C:\\Users\\Diagon\\Desktop\\UNIMIB\\ANNO 1\\SECONDO SEMESTRE\\Metodi Calcolo\\Matrici-mtx")
+    let paths: Vec<_> = fs::read_dir("C:\\Users\\Diagon\\Desktop\\UNIMIB\\ANNO 1\\SECONDO SEMESTRE\\Metodi Calcolo\\temp")
         .unwrap()
         .filter_map(|entry| {
             let path = entry.ok()?.path();
