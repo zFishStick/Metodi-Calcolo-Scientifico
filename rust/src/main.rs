@@ -7,7 +7,7 @@ use faer::{Mat, Side};
 use sprs::io::read_matrix_market;
 
 fn main() {
-    let folder = "C://Users//gabri//Desktop//matrici";
+    let folder = "C://Users//Diagon//Desktop//UNIMIB//ANNO 1//SECONDO SEMESTRE//Metodi Calcolo//Matrici-mtx";
 
     let matrix_list = [
         "Flan_1565", "StocF-1465", "cfd2", "cfd1", "G3_circuit",
@@ -41,6 +41,7 @@ fn main() {
             .expect("Errore");
         let factor = Llt::try_new_with_symbolic(symbolic, matrix_faer.as_ref(), Side::Lower)
             .expect("La matrice non è definita positiva o non è simmetrica");
+
         let x = factor.solve(b.as_ref());
         
         let elapsed = time.elapsed();
