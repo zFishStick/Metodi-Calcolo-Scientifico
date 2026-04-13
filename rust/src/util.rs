@@ -1,14 +1,27 @@
+use nalgebra_sparse::{self, CscMatrix, factorization::CscCholesky};
+use sprs::io::read_matrix_market;
 
 #[allow(dead_code)]
-pub fn format_memory(bytes: u64) -> String {
-    let units = ["B", "KB", "MB", "GB", "TB"]; 
-    let mut size = bytes as f64;
-    let mut unit_idx = 0;
+pub fn get_nnz(path: &str) -> usize {
+    let matrix_sprs = read_matrix_market::<f64, usize, _>(path)
+        .expect("Errore nella lettura del file Matrix Market")
+        .to_csc();
 
-    while size >= 1024.0 && unit_idx < units.len() - 1 {
-        size /= 1024.0;
-        unit_idx += 1;
-    }
+    let nrows = matrix_sprs.rows();
+    let ncols = matrix_sprs.cols();
 
-    format!("{:.2} {}", size, units[unit_idx])
+    let (indptr, indices, data) = matrix_sprs.into_raw_storage();
+
+    let matrix_nalgebra = CscMatrix::try_from_csc_data(
+        nrows,
+        ncols,
+        indptr.to_vec(),
+        indices.to_vec(),
+        data.to_vec(),
+    ).expect("Errore");
+
+    let cholesky = CscCholesky::factor(&matrix_nalgebra)
+        .expect("Errore");
+
+    cholesky.l().nnz()
 }
