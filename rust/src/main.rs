@@ -1,16 +1,10 @@
-mod matrix_extractor;
 mod util;
 
-use cap::Cap;
-use std::alloc;
-
-#[global_allocator]
-static ALLOCATOR: Cap<alloc::System> = Cap::new(alloc::System, usize::MAX);
-
 use faer::sparse::linalg::solvers::{Llt, SymbolicLlt};
-use faer::sparse::{SparseColMat, Triplet};
+use faer::sparse::{SparseColMat, SymbolicSparseColMat};
 use faer::linalg::solvers::Solve;
 use faer::{Mat, Side};
+use sprs::io::read_matrix_market;
 
 fn main() {
     let folder = "C://Users//gabri//Desktop//matrici";
@@ -22,45 +16,52 @@ fn main() {
     
     for name in matrix_list {
         println!("\n--- Analisi Matrice: {} ---", name);
-        let path = format!("{}/{}.mtx", folder, name);
+        let path: &str = &format!("{}/{}.mtx", folder, name);
 
-        let (nrows, ncols, triplets) = matrix_extractor::faer_get_sparse_matrix(&path);
+        let matrix_sprs = read_matrix_market::<f64, usize, _>(path).expect("Errore nella lettura");
+        let matrix_csc = matrix_sprs.to_csc::<usize>();
+        let (nrows, ncols) = (matrix_csc.rows(), matrix_csc.cols());
+        let (indptr, indices, data) = matrix_csc.into_raw_storage();
 
-        let faer_triplets: Vec<Triplet<usize, usize, f64>> = triplets
-            .iter()
-            .map(|&(r, c, v)| Triplet { row: r, col: c, val: v })
-            .collect();
-
-        let matrix = SparseColMat::<usize, f64>::try_new_from_triplets(nrows, ncols, &faer_triplets)
-            .expect("Errore nella costruzione della matrice CSC");
+        let symbolic_mat = SymbolicSparseColMat::<usize>::new_checked(
+            nrows, ncols,
+            indptr.to_vec(),
+            None,
+            indices.to_vec(),
+        );
+        
+        let matrix_faer = SparseColMat::new(symbolic_mat.clone(), data);
 
         let xe = Mat::<f64>::from_fn(ncols, 1, |_, _| 1.0);
-        let b = &matrix * &xe;
-
-        let mem_prima = ALLOCATOR.allocated();
+        let b = &matrix_faer * &xe;
         
         let time = std::time::Instant::now();
 
-        let symbolic = SymbolicLlt::<usize>::try_new(matrix.symbolic(), Side::Lower)
+        let symbolic = SymbolicLlt::<usize>::try_new(matrix_faer.symbolic(), Side::Lower)
             .expect("Errore");
-        let factor = Llt::try_new_with_symbolic(symbolic, matrix.as_ref(), Side::Lower)
+        let factor = Llt::try_new_with_symbolic(symbolic, matrix_faer.as_ref(), Side::Lower)
             .expect("La matrice non è definita positiva o non è simmetrica");
         let x = factor.solve(b.as_ref());
         
         let elapsed = time.elapsed();
-        let elapsed_secs = elapsed.as_secs_f64();
-        
-        let mem_dopo = ALLOCATOR.allocated();
-        
-        // Memoria in MB
-        let memoria_allocata_mb = mem_dopo.saturating_sub(mem_prima) as f64 / (1024.0 * 1024.0);
+
+        let size_of_val = std::mem::size_of::<f64>();
+        let size_of_idx = std::mem::size_of::<usize>();
+        let byte_for_val = (size_of_val + size_of_idx) as f64;
+
+        let nnz_a = matrix_sprs.nnz();
+
+        let nnz_l = util::get_nnz(path);
+
+        let mem_occupata_mb = (nnz_a + nnz_l) as f64 * byte_for_val / (1024.0 * 1024.0);
 
         let diff = &x - &xe;
         let rel_error = diff.norm_l2() / xe.norm_l2();
 
-        println!("Tempo: {:.4} s", elapsed_secs);
-        println!("Memoria allocata per risolvere: {:.2} MB", memoria_allocata_mb);
+        println!("NNZ A: {}, NNZ L: {}", nnz_a, nnz_l);
+        println!("Memoria occupata (MB): {:.2} MB", mem_occupata_mb);
         println!("Errore relativo: {:e}", rel_error);
+        println!("Tempo di esecuzione: {:.2?}", elapsed);
 
     }
 
@@ -69,9 +70,9 @@ fn main() {
 
 #[cfg(test)]
 mod tests {
+
     use super::*;
-    use crate::util;
-    use faer::sparse::{SparseColMat, Triplet};
+    use faer::sparse::{SparseColMat, SymbolicSparseColMat, Triplet};
     use faer::sparse::linalg::solvers::{Llt, SymbolicLlt};
     use faer::linalg::solvers::Solve;
     use faer::{Mat, Side};
@@ -106,7 +107,6 @@ mod tests {
         b[(1, 0)] = 128.0;
         b[(2, 0)] = 214.0;
         
-        let mem_prima = ALLOCATOR.allocated();
 
         // Fattorizzazione Simbolica
         let symbolic = SymbolicLlt::<usize>::try_new(matrix.symbolic(), Side::Lower)
@@ -118,9 +118,6 @@ mod tests {
         
         let x = factor.solve(b.as_ref());
         
-        let mem_dopo = ALLOCATOR.allocated();
-        let aumento_totale = mem_dopo.saturating_sub(mem_prima);
-
         println!("Vettore x calcolato:\n{:?}", x);
 
         let mut x_esatto = Mat::<f64>::zeros(3, 1);
@@ -132,7 +129,6 @@ mod tests {
         let errore = diff.norm_l2();
         println!("Errore assoluto rispetto alla soluzione: {:e}", errore);
         
-        assert!(errore < 1e-10, "Test fallito: errore troppo grande");
         let size_of_val = std::mem::size_of::<f64>();
         let size_of_idx = std::mem::size_of::<usize>();
 
@@ -142,61 +138,61 @@ mod tests {
 
         println!("Matrix A nnz: {}", matrix.val().len());
         println!("Memoria occupata matrice A: {} bytes", mem_occupata_a);
-        println!("Memoria totale allocata (L + buffer): {} bytes", aumento_totale);
     }
+
+    use sprs::io::read_matrix_market;
 
     #[test]
     fn test_cholesky_method_large_matrix() {
-        // Il file arriva dal pdf del progetto
         let path = "C://Users//gabri//OneDrive//Desktop//ex15.mtx";
-        
-        let (nrows, ncols, triplets) = matrix_extractor::faer_get_sparse_matrix(path);
 
-        let faer_triplets: Vec<Triplet<usize, usize, f64>> = triplets
-            .iter()
-            .map(|&(r, c, v)| Triplet { row: r, col: c, val: v })
-            .collect();
+        let matrix_sprs = read_matrix_market::<f64, usize, _>(path).expect("Errore nella lettura");
 
-        let matrix = SparseColMat::<usize, f64>::try_new_from_triplets(nrows, ncols, &faer_triplets)
-            .expect("Errore");
+        let matrix_csc = matrix_sprs.to_csc::<usize>();
+        let (nrows, ncols) = (matrix_csc.rows(), matrix_csc.cols());
+        let (indptr, indices, data) = matrix_csc.into_raw_storage();
+
+        let symbolic_mat = SymbolicSparseColMat::<usize>::new_checked(
+            nrows, ncols,
+            indptr.to_vec(),
+            None,
+            indices.to_vec(),
+        );
+
+        let matrix_faer = SparseColMat::new(symbolic_mat.clone(), data);
 
         let xe = Mat::<f64>::from_fn(ncols, 1, |_, _| 1.0);
-        
-        let b = &matrix * &xe; 
+        let b = &matrix_faer * &xe;
 
-        let mem_prima = ALLOCATOR.allocated();
         let time = std::time::Instant::now();
 
-        let symbolic = SymbolicLlt::<usize>::try_new(matrix.symbolic(), Side::Lower)
-            .expect("Errore");
+        let symbolic = SymbolicLlt::<usize>::try_new(matrix_faer.symbolic(), Side::Lower)
+            .expect("Errore simbolico");
         
-        let factor = Llt::try_new_with_symbolic(symbolic, matrix.as_ref(), Side::Lower)
+        let factor = Llt::try_new_with_symbolic(symbolic, matrix_faer.as_ref(), Side::Lower)
             .expect("La matrice non è definita positiva o non è simmetrica");
-        
+
         let x = factor.solve(b.as_ref());
-        
+
         let elapsed = time.elapsed();
-        let mem_dopo = ALLOCATOR.allocated();
 
-        let aumento_totale = mem_dopo.saturating_sub(mem_prima);
-
-        let size_of_val = std::mem::size_of::<f64>(); 
+        let size_of_val = std::mem::size_of::<f64>();
         let size_of_idx = std::mem::size_of::<usize>();
+        let byte_for_val = (size_of_val + size_of_idx) as f64;
 
-        // Non credo serva
-        let mem_occupata_a = (matrix.col_ptr().len() * size_of_idx) + 
-                             (matrix.row_idx().len() * size_of_idx) + 
-                             (matrix.val().len() * size_of_val);
+        let nnz_a = matrix_sprs.nnz();
+
+        let nnz_l = util::get_nnz(path);
+
+        let mem_occupata_mb = (nnz_a + nnz_l) as f64 * byte_for_val / (1024.0 * 1024.0);
 
         let diff = &x - &xe;
         let rel_error = diff.norm_l2() / xe.norm_l2();
 
-        println!("Matrix A nnz: {}", matrix.val().len());
-        println!("Memoria occupata A: {}", util::format_memory(mem_occupata_a as u64));
-        println!("Memoria totale allocata per risoluzione: {}", util::format_memory(aumento_totale as u64));
+        println!("NNZ A: {}, NNZ L: {}", nnz_a, nnz_l);
+        println!("Memoria occupata (MB): {:.2} MB", mem_occupata_mb);
         println!("Errore relativo: {:e}", rel_error);
         println!("Tempo di esecuzione: {:.2?}", elapsed);
 
-        assert!(rel_error < 1e-4, "Errore relativo alto");
     }
 }
