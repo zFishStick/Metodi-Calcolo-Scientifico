@@ -70,7 +70,6 @@ fn main() {
 
 #[cfg(test)]
 mod tests {
-
     use super::*;
     use faer::sparse::{SparseColMat, SymbolicSparseColMat, Triplet};
     use faer::sparse::linalg::solvers::{Llt, SymbolicLlt};
