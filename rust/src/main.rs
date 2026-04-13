@@ -144,7 +144,7 @@ mod tests {
 
     #[test]
     fn test_cholesky_method_large_matrix() {
-        let path = "C://Users//gabri//OneDrive//Desktop//ex15.mtx";
+        let path = r"C:/Users/gabri/OneDrive/Desktop/cfd1.mtx";
 
         let matrix_sprs = read_matrix_market::<f64, usize, _>(path).expect("Errore nella lettura");
 
@@ -168,7 +168,7 @@ mod tests {
 
         let symbolic = SymbolicLlt::<usize>::try_new(matrix_faer.symbolic(), Side::Lower)
             .expect("Errore simbolico");
-        
+
         let factor = Llt::try_new_with_symbolic(symbolic, matrix_faer.as_ref(), Side::Lower)
             .expect("La matrice non è definita positiva o non è simmetrica");
 
@@ -180,7 +180,7 @@ mod tests {
         let size_of_idx = std::mem::size_of::<usize>();
         let byte_for_val = (size_of_val + size_of_idx) as f64;
 
-        let nnz_a = matrix_sprs.nnz();
+        let nnz_a = matrix_faer.compute_nnz();
 
         let nnz_l = util::get_nnz(path);
 
