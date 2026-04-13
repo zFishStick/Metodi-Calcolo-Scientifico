@@ -1,6 +1,5 @@
 mod util;
 
-
 use faer::sparse::linalg::solvers::{Llt, SymbolicLlt};
 use faer::sparse::{SparseColMat, SymbolicSparseColMat};
 use faer::linalg::solvers::Solve;
