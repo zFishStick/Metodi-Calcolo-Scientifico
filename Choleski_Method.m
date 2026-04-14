@@ -48,6 +48,9 @@ for i = 1 : length(matrix_names)
     tempi(end+1) = t;
     errori(end+1) = rel_err;
     memorie(end+1) = mem_MB;
+
+    %libero la memoria just to be sure
+    clear dA x;
 end
 
 if ispc
