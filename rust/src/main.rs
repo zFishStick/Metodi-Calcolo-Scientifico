@@ -10,6 +10,7 @@ use std::alloc::System;
 use std::fs::File;
 use csv::Writer;
 
+
 #[global_allocator]
 static ALLOCATOR: Cap<System> = Cap::new(System, usize::MAX);
 
@@ -23,14 +24,19 @@ fn main() {
     //     "parabolic_fem", "apache2", "shallow_water1", "ex15",
     // ];
 
-    let matrix_list = ["apache2", "ex15", "cfd2", "cfd1", "StocF-1465", "Flan_1565"];
+    let matrix_list = ["apache2", "ex15", "cfd2", "cfd1", "parabolic_fem", "shallow_water1", "G3_circuit", "Flan_1565", "StocF-1465"];
     
     for name in matrix_list {
         println!("\n--- Analisi Matrice: {} ---", name);
         let path: &str = &format!("{}/{}.mtx", folder, name);
 
         let matrix_sprs = read_matrix_market::<f64, usize, _>(path).expect("Errore nella lettura");
+        
         let matrix_csc = matrix_sprs.to_csc::<usize>();
+        
+        //decommenta qua sotto
+        //let matrix_csc = symmetrize_csc(&matrix_csc);
+        
         let (nrows, ncols) = (matrix_csc.rows(), matrix_csc.cols());
 
         let (indptr, indices, data) = matrix_csc.into_raw_storage();
@@ -113,6 +119,45 @@ fn write_results_csv(
     ]).unwrap();
 
     wtr.flush().unwrap();
+}
+
+fn symmetrize_csc(mat: &sprs::CsMat<f64>) -> sprs::CsMat<f64> {
+    use std::collections::HashMap;
+    use sprs::TriMat;
+
+    let (nrows, ncols) = mat.shape();
+
+    let mut acc: HashMap<(usize, usize), f64> = HashMap::new();
+
+    // 1. accumulo matrice originale
+    for (val, (r, c)) in mat.iter() {
+        *acc.entry((r, c)).or_insert(0.0) += *val;
+    }
+
+    // 2. 🔥 QUI: aggiunta epsilon sulla diagonale
+    for i in 0..nrows.min(ncols) {
+        acc.entry((i, i))
+            .and_modify(|v| *v += 1e-10)
+            .or_insert(1e-10);
+    }
+
+    // 3. costruzione simmetrica
+    let mut triplet = TriMat::with_capacity((nrows, ncols), acc.len());
+
+    for ((r, c), v_rc) in &acc {
+        if r <= c {
+            let v_cr = acc.get(&(*c, *r)).cloned().unwrap_or(0.0);
+            let avg = 0.5 * (v_rc + v_cr);
+
+            triplet.add_triplet(*r, *c, avg);
+
+            if r != c {
+                triplet.add_triplet(*c, *r, avg);
+            }
+        }
+    }
+
+    triplet.to_csc()
 }
 
 
