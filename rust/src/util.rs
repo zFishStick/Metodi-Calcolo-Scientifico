@@ -1,6 +1,7 @@
 
 use std::process::Command;
 
+#[allow(dead_code)]
 pub fn get_nnz(path: &str) -> usize {
     let output = Command::new("python")
         .arg("get_nnz.py")
