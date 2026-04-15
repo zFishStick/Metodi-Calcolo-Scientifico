@@ -5,13 +5,19 @@ use faer::sparse::{SparseColMat, SymbolicSparseColMat};
 use faer::linalg::solvers::Solve;
 use faer::{Mat, Side};
 use sprs::io::read_matrix_market;
+use std::fs::File;
+use std::fs;
+use csv::Writer;
 
 fn main() {
     let folder = "C://Users//Diagon//Desktop//UNIMIB//ANNO 1//SECONDO SEMESTRE//Metodi Calcolo//Matrici-mtx";
 
-    let matrix_list = [
-        "Flan_1565", "StocF-1465", "cfd2", "cfd1", "G3_circuit",
+    let matrix_list_aaaa = [
+        "Flan_1565","StocF-1465", "cfd2", "cfd1", "G3_circuit",
         "parabolic_fem", "apache2", "shallow_water1", "ex15",
+    ];
+    let matrix_list = [
+        "G3_circuit", "StocF-1465",
     ];
     
     for name in matrix_list {
@@ -64,8 +70,51 @@ fn main() {
         println!("Errore relativo: {:e}", rel_error);
         println!("Tempo di esecuzione: {:.2?}", elapsed);
 
+        write_results_csv(
+            "risultati_rust.csv",
+            name,
+            matrix_sprs.cols(),
+            elapsed.as_secs_f64(),
+            rel_error,
+            mem_occupata_mb
+        );
+
     }
 
+}
+
+fn write_results_csv(
+    filename: &str,
+    nome: &str,
+    dimensione: usize,
+    tempo: f64,
+    errore: f64,
+    memoria: f64
+) {
+    let file_exists = std::path::Path::new(filename).exists();
+
+    let file = File::options()
+        .append(true)
+        .create(true)
+        .open(filename)
+        .unwrap();
+
+    let mut wtr = Writer::from_writer(file);
+
+    if !file_exists {
+        wtr.write_record(&["nome", "dimensione", "tempo", "errore", "memoria"])
+            .unwrap();
+    }
+
+    wtr.write_record(&[
+        nome,
+        &dimensione.to_string(),
+        &tempo.to_string(),
+        &errore.to_string(),
+        &memoria.to_string(),
+    ]).unwrap();
+
+    wtr.flush().unwrap();
 }
 
 

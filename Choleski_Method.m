@@ -41,7 +41,7 @@ for i = 1 : length(matrix_names)
     rel_err = norm(x - xe)/norm(xe);
     
     mem_dopo = whos('dA').bytes + whos('x').bytes;
-    mem_MB = (mem_prima.bytes + mem_dopo) / 1024^2;
+    mem_MB = (mem_dopo - mem_prima.bytes) / 1024^2;
 
     nomi{end+1} = matrix_names{i};
     dimensioni(end+1) = size(A,1);
