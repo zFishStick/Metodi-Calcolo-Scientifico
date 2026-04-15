@@ -13,7 +13,7 @@ fn main() {
     let folder = "C://Users//Diagon//Desktop//UNIMIB//ANNO 1//SECONDO SEMESTRE//Metodi Calcolo//Matrici-mtx";
 
     let matrix_list = [
-        "cfd2",
+        "apache2", "cfd2",
     ];
     let matrix_listaaa = [
         "apache2", "Flan_1565", "shallow_water1", "ex15", 
