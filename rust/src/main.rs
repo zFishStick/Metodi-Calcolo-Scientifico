@@ -5,21 +5,21 @@ use faer::sparse::{SparseColMat, SymbolicSparseColMat};
 use faer::linalg::solvers::Solve;
 use faer::{Mat, Side};
 use sprs::io::read_matrix_market;
-use std::fs::File;
-use std::fs;
-use csv::Writer;
+use cap::Cap;
+use std::alloc::System;
+
+#[global_allocator]
+static ALLOCATOR: Cap<System> = Cap::new(System, usize::MAX);
 
 fn main() {
-    let folder = "C://Users//Diagon//Desktop//UNIMIB//ANNO 1//SECONDO SEMESTRE//Metodi Calcolo//Matrici-mtx";
+    let folder = "C://Users//gabri//OneDrive//Desktop//matrici";
 
-    let matrix_list = [
-        "apache2", "cfd2",
-    ];
-    let matrix_listaaa = [
-        "apache2", "Flan_1565", "shallow_water1", "ex15", 
-        "StocF-1465", "cfd2", "cfd1", "G3_circuit",
-        "parabolic_fem",
-    ];
+    // let matrix_list = [
+    //     "Flan_1565", "StocF-1465", "cfd2", "cfd1", "G3_circuit",
+    //     "parabolic_fem", "apache2", "shallow_water1", "ex15",
+    // ];
+
+    let matrix_list = ["apache2", "cfd2"];
     
     for name in matrix_list {
         println!("\n--- Analisi Matrice: {} ---", name);
@@ -28,6 +28,7 @@ fn main() {
         let matrix_sprs = read_matrix_market::<f64, usize, _>(path).expect("Errore nella lettura");
         let matrix_csc = matrix_sprs.to_csc::<usize>();
         let (nrows, ncols) = (matrix_csc.rows(), matrix_csc.cols());
+
         let (indptr, indices, data) = matrix_csc.into_raw_storage();
 
         let symbolic_mat = SymbolicSparseColMat::<usize>::new_checked(
@@ -42,6 +43,7 @@ fn main() {
         let xe = Mat::<f64>::from_fn(ncols, 1, |_, _| 1.0);
         let b = &matrix_faer * &xe;
         
+        let mem_prima = ALLOCATOR.allocated();
         let time = std::time::Instant::now();
 
         let symbolic = SymbolicLlt::<usize>::try_new(matrix_faer.symbolic(), Side::Lower)
@@ -52,22 +54,13 @@ fn main() {
         let x = factor.solve(b.as_ref());
         
         let elapsed = time.elapsed();
-
-        let size_of_val = std::mem::size_of::<f64>();
-        let size_of_idx = std::mem::size_of::<usize>();
-        let byte_for_val = (size_of_val + size_of_idx) as f64;
-
-        /*let nnz_a = matrix_sprs.nnz();
-
-        let nnz_l = util::get_nnz(path);
-
-        let mem_occupata_mb = (nnz_a + nnz_l) as f64 * byte_for_val / (1024.0 * 1024.0);*/
+        let mem_dopo = ALLOCATOR.allocated();
 
         let diff = &x - &xe;
         let rel_error = diff.norm_l2() / xe.norm_l2();
+        let aumento_memoria = mem_dopo.saturating_sub(mem_prima);
 
-        let temp: f64 = 0.0;//println!("NNZ A: {}, NNZ L: {}", nnz_a, nnz_l);
-        //println!("Memoria occupata (MB): {:.2} MB", mem_occupata_mb);
+        println!("Memoria allocata: {}", aumento_memoria);
         println!("Errore relativo: {:e}", rel_error);
         println!("Tempo di esecuzione: {:.2?}", elapsed);
 
