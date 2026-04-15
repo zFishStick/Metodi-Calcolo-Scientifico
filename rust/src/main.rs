@@ -50,6 +50,7 @@ fn main() {
             .expect("Errore");
         let factor = Llt::try_new_with_symbolic(symbolic, matrix_faer.as_ref(), Side::Lower)
             .expect("La matrice non è definita positiva o non è simmetrica");
+
         let x = factor.solve(b.as_ref());
         
         let elapsed = time.elapsed();
@@ -63,8 +64,51 @@ fn main() {
         println!("Errore relativo: {:e}", rel_error);
         println!("Tempo di esecuzione: {:.2?}", elapsed);
 
+        write_results_csv(
+            "risultati_rust.csv",
+            name,
+            matrix_sprs.cols(),
+            elapsed.as_secs_f64(),
+            rel_error,
+            temp//mem_occupata_mb
+        );
+
     }
 
+}
+
+fn write_results_csv(
+    filename: &str,
+    nome: &str,
+    dimensione: usize,
+    tempo: f64,
+    errore: f64,
+    memoria: f64
+) {
+    let file_exists = std::path::Path::new(filename).exists();
+
+    let file = File::options()
+        .append(true)
+        .create(true)
+        .open(filename)
+        .unwrap();
+
+    let mut wtr = Writer::from_writer(file);
+
+    if !file_exists {
+        wtr.write_record(&["nome", "dimensione", "tempo", "errore", "memoria"])
+            .unwrap();
+    }
+
+    wtr.write_record(&[
+        nome,
+        &dimensione.to_string(),
+        &tempo.to_string(),
+        &errore.to_string(),
+        &memoria.to_string(),
+    ]).unwrap();
+
+    wtr.flush().unwrap();
 }
 
 
