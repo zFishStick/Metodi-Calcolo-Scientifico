@@ -7,19 +7,23 @@ use faer::{Mat, Side};
 use sprs::io::read_matrix_market;
 use cap::Cap;
 use std::alloc::System;
+use std::fs::File;
+use csv::Writer;
 
 #[global_allocator]
 static ALLOCATOR: Cap<System> = Cap::new(System, usize::MAX);
 
 fn main() {
-    let folder = "C://Users//gabri//OneDrive//Desktop//matrici";
+    //let folder = "C://Users//gabri//OneDrive//Desktop//matrici";
+
+    let folder = "C:\\Users\\Simone\\Desktop\\Università\\Magistrale\\Metodi del calcolo scientifico\\Progetto1\\matrici_mtx";
 
     // let matrix_list = [
     //     "Flan_1565", "StocF-1465", "cfd2", "cfd1", "G3_circuit",
     //     "parabolic_fem", "apache2", "shallow_water1", "ex15",
     // ];
 
-    let matrix_list = ["apache2", "cfd2"];
+    let matrix_list = ["apache2", "ex15", "cfd2", "cfd1", "StocF-1465", "Flan_1565"];
     
     for name in matrix_list {
         println!("\n--- Analisi Matrice: {} ---", name);
@@ -58,9 +62,9 @@ fn main() {
 
         let diff = &x - &xe;
         let rel_error = diff.norm_l2() / xe.norm_l2();
-        let aumento_memoria = mem_dopo.saturating_sub(mem_prima);
+        let aumento_memoria:f64 = mem_dopo.saturating_sub(mem_prima) as f64;
 
-        println!("Memoria allocata: {}", aumento_memoria);
+        println!("Memoria allocata: {} MB", aumento_memoria / (1024.0 * 1024.0));
         println!("Errore relativo: {:e}", rel_error);
         println!("Tempo di esecuzione: {:.2?}", elapsed);
 
@@ -70,7 +74,7 @@ fn main() {
             matrix_sprs.cols(),
             elapsed.as_secs_f64(),
             rel_error,
-            temp//mem_occupata_mb
+            aumento_memoria
         );
 
     }
