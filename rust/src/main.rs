@@ -12,12 +12,13 @@ use csv::Writer;
 fn main() {
     let folder = "C://Users//Diagon//Desktop//UNIMIB//ANNO 1//SECONDO SEMESTRE//Metodi Calcolo//Matrici-mtx";
 
-    let matrix_list_aaaa = [
-        "Flan_1565","StocF-1465", "cfd2", "cfd1", "G3_circuit",
-        "parabolic_fem", "apache2", "shallow_water1", "ex15",
-    ];
     let matrix_list = [
-        "G3_circuit", "StocF-1465",
+        "cfd2",
+    ];
+    let matrix_listaaa = [
+        "apache2", "Flan_1565", "shallow_water1", "ex15", 
+        "StocF-1465", "cfd2", "cfd1", "G3_circuit",
+        "parabolic_fem",
     ];
     
     for name in matrix_list {
@@ -56,17 +57,17 @@ fn main() {
         let size_of_idx = std::mem::size_of::<usize>();
         let byte_for_val = (size_of_val + size_of_idx) as f64;
 
-        let nnz_a = matrix_sprs.nnz();
+        /*let nnz_a = matrix_sprs.nnz();
 
         let nnz_l = util::get_nnz(path);
 
-        let mem_occupata_mb = (nnz_a + nnz_l) as f64 * byte_for_val / (1024.0 * 1024.0);
+        let mem_occupata_mb = (nnz_a + nnz_l) as f64 * byte_for_val / (1024.0 * 1024.0);*/
 
         let diff = &x - &xe;
         let rel_error = diff.norm_l2() / xe.norm_l2();
 
-        println!("NNZ A: {}, NNZ L: {}", nnz_a, nnz_l);
-        println!("Memoria occupata (MB): {:.2} MB", mem_occupata_mb);
+        let temp: f64 = 0.0;//println!("NNZ A: {}, NNZ L: {}", nnz_a, nnz_l);
+        //println!("Memoria occupata (MB): {:.2} MB", mem_occupata_mb);
         println!("Errore relativo: {:e}", rel_error);
         println!("Tempo di esecuzione: {:.2?}", elapsed);
 
@@ -76,7 +77,7 @@ fn main() {
             matrix_sprs.cols(),
             elapsed.as_secs_f64(),
             rel_error,
-            mem_occupata_mb
+            temp//mem_occupata_mb
         );
 
     }
