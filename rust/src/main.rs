@@ -107,11 +107,12 @@ fn main() {
             &mut stack, //stack di prima
         );
 
-        let x = b; //rinomino per comodità
         
         //da qui in poi tutto uguale a prima
         let elapsed = time.elapsed();
         let mem_dopo = ALLOCATOR.allocated();
+
+        let x = b; //rinomino per comodità
 
         let diff = &x - &xe;
         let rel_error = diff.norm_l2() / xe.norm_l2();
