@@ -86,39 +86,6 @@ function cholesky_decomposition()
                              
     CSV.write(filename, results)
 
-    #=
-    p1 = plot(dimensioni, errori,
-        xlabel = "Dimensione matrice",
-        ylabel = "Errore relativo",
-        title  = "Errore vs Dimensione",
-        xscale = :log10,
-        yscale = :log10,
-        marker = :circle,
-        lw     = 2,
-        label  = "errore")
-
-    p2 = plot(dimensioni, tempi,
-        xlabel = "Dimensione matrice",
-        ylabel = "Tempo (s)",
-        title  = "Tempo vs Dimensione",
-        xscale = :log10,
-        marker = :circle,
-        lw     = 2,
-        label  = "tempo")
-
-    p3 = plot(dimensioni, memorie,
-        xlabel = "Dimensione matrice",
-        ylabel = "Memoria (MB)",
-        title  = "Memoria vs Dimensione",
-        xscale = :log10,
-        marker = :circle,
-        lw     = 2,
-        label  = "memoria")
-
-    # Tutti e tre affiancati in un unico file
-    plot(p1, p2, p3, layout=(1,3), size=(1200,400))
-    savefig("risultati.png")
-    =#
     return
 end
 
