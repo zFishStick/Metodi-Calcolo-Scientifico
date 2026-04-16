@@ -1,8 +1,6 @@
 mod util;
 
-use faer::sparse::linalg::solvers::{Llt, SymbolicLlt};
 use faer::sparse::{SparseColMat, SymbolicSparseColMat};
-use faer::linalg::solvers::Solve;
 use faer::sparse::linalg::cholesky;
 use faer::{Mat, Side};
 use sprs::io::read_matrix_market;
@@ -80,35 +78,39 @@ fn main() {
         let regularization = LltRegularization::default();
         let llt_params = Default::default();
 
-        // workspace
-        let req = symbolic_cholesky.factorize_numeric_llt_scratch(par, llt_params);
+        //Per funzionare ha bisogno di uno stack di memoria (penso per farci le operazioni sopra bho)
+        let req = symbolic_cholesky.factorize_numeric_llt_scratch(par, llt_params); //funzione che calcola la memoria dello stack
         let mut stack_buf = MemBuffer::new(req);
         let mut stack = MemStack::new(&mut stack_buf);
 
+        //funzione che calcola effettivamente i valori della matrice
         let factor = symbolic_cholesky.factorize_numeric_llt(
-            &mut l_values,
-            matrix_faer.as_ref(),
-            Side::Lower,
-            regularization,
-            par,
-            &mut stack,
-            llt_params,
+            &mut l_values, //buffer di prima
+            matrix_faer.as_ref(), //matrice originale
+            Side::Lower, //parametri di default
+            regularization, //parametri di default
+            par, //parametri di default
+            &mut stack, //stack di prima 
+            llt_params, //parametri di default
         ).expect("err in numericFactorize");
+        
+        //ora abbiamo la matrice fattorizzata, passiamo alla risoluzione del sistema
 
-       // stack
-        let req = symbolic_cholesky.solve_in_place_scratch::<f64>(1, Par::Seq);
+        //per risolvere il sistema serve, come prima, anche per la risoluzione uno stack di memoria
+        let req = symbolic_cholesky.solve_in_place_scratch::<f64>(1, Par::Seq); //funzione che calcola la memoria per la risoluzione
         let mut stack_buf = MemBuffer::new(req);
         let mut stack = MemStack::new(&mut stack_buf);
 
         factor.solve_in_place_with_conj(
-            Conj::No,
-            b.as_mut(),
-            Par::Seq,
-            &mut stack,
+            Conj::No, //riguarda matrici di numeri complesso quindi mettiamo NO
+            b.as_mut(), //vettore soluzione, viene modificato in place e diventerà il nostro vettore x
+            Par::Seq, //parametri di default
+            &mut stack, //stack di prima
         );
 
-        let x = b;
+        let x = b; //rinomino per comodità
         
+        //da qui in poi tutto uguale a prima
         let elapsed = time.elapsed();
         let mem_dopo = ALLOCATOR.allocated();
 
