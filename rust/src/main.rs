@@ -22,14 +22,10 @@ use faer::Conj;
 static ALLOCATOR: Cap<System> = Cap::new(System, usize::MAX);
 
 fn main() {
-    //let folder = "C://Users//gabri//OneDrive//Desktop//matrici";
+    
+    let folder = "C:\\Users\\Diagon\\Desktop\\UNIMIB\\ANNO 1\\SECONDO SEMESTRE\\Metodi Calcolo\\Matrici-mtx";
 
-    let folder = "C:\\Users\\Simone\\Desktop\\Università\\Magistrale\\Metodi del calcolo scientifico\\Progetto1\\matrici_mtx";
-
-    // let matrix_list = [
-    //     "Flan_1565", "StocF-1465", "cfd2", "cfd1", "G3_circuit",
-    //     "parabolic_fem", "apache2", "shallow_water1", "ex15",
-    // ];
+    //let folder = "C:\\Users\\Simone\\Desktop\\Università\\Magistrale\\Metodi del calcolo scientifico\\Progetto1\\matrici_mtx";
 
     let matrix_list = ["apache2", "ex15", "cfd2", "cfd1", "parabolic_fem", "shallow_water1", "G3_circuit", "Flan_1565", "StocF-1465"];
     
