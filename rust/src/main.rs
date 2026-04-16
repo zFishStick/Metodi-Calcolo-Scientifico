@@ -1,7 +1,6 @@
 mod util;
 
 use faer::sparse::{SparseColMat, SymbolicSparseColMat};
-use faer::sparse::linalg::cholesky;
 use faer::{Mat, Side};
 use sprs::io::read_matrix_market;
 use cap::Cap;
@@ -9,8 +8,8 @@ use std::alloc::System;
 use std::fs::File;
 use csv::Writer;
 
-use faer::sparse::linalg::cholesky::CholeskySymbolicParams;
-use faer::sparse::linalg::cholesky::SymmetricOrdering;
+use faer::sparse::linalg::cholesky;
+use faer::sparse::linalg::cholesky::{CholeskySymbolicParams, SymmetricOrdering};
 use faer::dyn_stack::{MemBuffer, MemStack};
 use faer::Par;
 use faer::linalg::cholesky::llt::factor::LltRegularization;
@@ -59,14 +58,14 @@ fn main() {
         let time = std::time::Instant::now();
         //fino a qui tutto uguale a prima
 
-        //uso un'altro modulo della libreria, uso faer...::cholesky al posto di solve
+        //uso un'altro modulo della libreria, uso faer...::cholesky al posto di ::solve
         //calcolo matrice simbolica della fattorizzazione cholesky
         let symbolic_cholesky = cholesky::factorize_symbolic_cholesky(
             symbolic_mat.as_ref(),
             Side::Lower,
-            SymmetricOrdering::Amd, // parametri di default che devo passare
-            CholeskySymbolicParams::default(), //parametri di default che devo passare
-        ).expect("errore in simbolycChol");
+            SymmetricOrdering::Amd, // parametri di default
+            CholeskySymbolicParams::default(), //parametri di default
+        ).expect("errore in simbolyc_cholesky");
 
         //dopo aver calcolato la matrice simbolica devo calcolare i valori per riempirla
         
@@ -92,7 +91,7 @@ fn main() {
             par, //parametri di default
             &mut stack, //stack di prima 
             llt_params, //parametri di default
-        ).expect("err in numericFactorize");
+        ).expect("errore in numeric_factorize");
         
         //ora abbiamo la matrice fattorizzata, passiamo alla risoluzione del sistema
 
