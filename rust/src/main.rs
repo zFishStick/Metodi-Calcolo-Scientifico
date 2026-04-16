@@ -3,6 +3,7 @@ mod util;
 use faer::sparse::linalg::solvers::{Llt, SymbolicLlt};
 use faer::sparse::{SparseColMat, SymbolicSparseColMat};
 use faer::linalg::solvers::Solve;
+use faer::sparse::linalg::cholesky;
 use faer::{Mat, Side};
 use sprs::io::read_matrix_market;
 use cap::Cap;
@@ -10,6 +11,12 @@ use std::alloc::System;
 use std::fs::File;
 use csv::Writer;
 
+use faer::sparse::linalg::cholesky::CholeskySymbolicParams;
+use faer::sparse::linalg::cholesky::SymmetricOrdering;
+use faer::dyn_stack::{MemBuffer, MemStack};
+use faer::Par;
+use faer::linalg::cholesky::llt::factor::LltRegularization;
+use faer::Conj;
 
 #[global_allocator]
 static ALLOCATOR: Cap<System> = Cap::new(System, usize::MAX);
@@ -34,9 +41,6 @@ fn main() {
         
         let matrix_csc = matrix_sprs.to_csc::<usize>();
         
-        //decommenta qua sotto
-        //let matrix_csc = symmetrize_csc(&matrix_csc);
-        
         let (nrows, ncols) = (matrix_csc.rows(), matrix_csc.cols());
 
         let (indptr, indices, data) = matrix_csc.into_raw_storage();
@@ -51,17 +55,59 @@ fn main() {
         let matrix_faer = SparseColMat::new(symbolic_mat.clone(), data);
 
         let xe = Mat::<f64>::from_fn(ncols, 1, |_, _| 1.0);
-        let b = &matrix_faer * &xe;
+        let mut b = &matrix_faer * &xe;
         
         let mem_prima = ALLOCATOR.allocated();
         let time = std::time::Instant::now();
+        //fino a qui tutto uguale a prima
 
-        let symbolic = SymbolicLlt::<usize>::try_new(matrix_faer.symbolic(), Side::Lower)
-            .expect("Errore");
-        let factor = Llt::try_new_with_symbolic(symbolic, matrix_faer.as_ref(), Side::Lower)
-            .expect("La matrice non è definita positiva o non è simmetrica");
+        //uso un'altro modulo della libreria, uso faer...::cholesky al posto di solve
+        //calcolo matrice simbolica della fattorizzazione cholesky
+        let symbolic_cholesky = cholesky::factorize_symbolic_cholesky(
+            symbolic_mat.as_ref(),
+            Side::Lower,
+            SymmetricOrdering::Amd, // parametri di default che devo passare
+            CholeskySymbolicParams::default(), //parametri di default che devo passare
+        ).expect("errore in simbolycChol");
 
-        let x = factor.solve(b.as_ref());
+        //dopo aver calcolato la matrice simbolica devo calcolare i valori per riempirla
+        
+        //per qualche motivo la funzione per calcolare i valori ha bisogno di un buffer per funzionare
+        let mut l_values = vec![0.0f64; symbolic_cholesky.len_val()];
+
+        // parametri di default della fase numerica
+        let par = Par::Seq;
+        let regularization = LltRegularization::default();
+        let llt_params = Default::default();
+
+        // workspace
+        let req = symbolic_cholesky.factorize_numeric_llt_scratch(par, llt_params);
+        let mut stack_buf = MemBuffer::new(req);
+        let mut stack = MemStack::new(&mut stack_buf);
+
+        let factor = symbolic_cholesky.factorize_numeric_llt(
+            &mut l_values,
+            matrix_faer.as_ref(),
+            Side::Lower,
+            regularization,
+            par,
+            &mut stack,
+            llt_params,
+        ).expect("err in numericFactorize");
+
+       // stack
+        let req = symbolic_cholesky.solve_in_place_scratch::<f64>(1, Par::Seq);
+        let mut stack_buf = MemBuffer::new(req);
+        let mut stack = MemStack::new(&mut stack_buf);
+
+        factor.solve_in_place_with_conj(
+            Conj::No,
+            b.as_mut(),
+            Par::Seq,
+            &mut stack,
+        );
+
+        let x = b;
         
         let elapsed = time.elapsed();
         let mem_dopo = ALLOCATOR.allocated();
@@ -120,46 +166,6 @@ fn write_results_csv(
 
     wtr.flush().unwrap();
 }
-
-fn symmetrize_csc(mat: &sprs::CsMat<f64>) -> sprs::CsMat<f64> {
-    use std::collections::HashMap;
-    use sprs::TriMat;
-
-    let (nrows, ncols) = mat.shape();
-
-    let mut acc: HashMap<(usize, usize), f64> = HashMap::new();
-
-    // 1. accumulo matrice originale
-    for (val, (r, c)) in mat.iter() {
-        *acc.entry((r, c)).or_insert(0.0) += *val;
-    }
-
-    // 2. 🔥 QUI: aggiunta epsilon sulla diagonale
-    for i in 0..nrows.min(ncols) {
-        acc.entry((i, i))
-            .and_modify(|v| *v += 1e-10)
-            .or_insert(1e-10);
-    }
-
-    // 3. costruzione simmetrica
-    let mut triplet = TriMat::with_capacity((nrows, ncols), acc.len());
-
-    for ((r, c), v_rc) in &acc {
-        if r <= c {
-            let v_cr = acc.get(&(*c, *r)).cloned().unwrap_or(0.0);
-            let avg = 0.5 * (v_rc + v_cr);
-
-            triplet.add_triplet(*r, *c, avg);
-
-            if r != c {
-                triplet.add_triplet(*c, *r, avg);
-            }
-        }
-    }
-
-    triplet.to_csc()
-}
-
 
 #[cfg(test)]
 mod tests {
