@@ -1,9 +1,6 @@
 mod util;
 
-use faer::sparse::linalg::solvers::{Llt, SymbolicLlt};
 use faer::sparse::{SparseColMat, SymbolicSparseColMat};
-use faer::linalg::solvers::Solve;
-use faer::sparse::linalg::cholesky;
 use faer::{Mat, Side};
 use sprs::io::read_matrix_market;
 use cap::Cap;
@@ -11,8 +8,8 @@ use std::alloc::System;
 use std::fs::File;
 use csv::Writer;
 
-use faer::sparse::linalg::cholesky::CholeskySymbolicParams;
-use faer::sparse::linalg::cholesky::SymmetricOrdering;
+use faer::sparse::linalg::cholesky;
+use faer::sparse::linalg::cholesky::{CholeskySymbolicParams, SymmetricOrdering};
 use faer::dyn_stack::{MemBuffer, MemStack};
 use faer::Par;
 use faer::linalg::cholesky::llt::factor::LltRegularization;
@@ -57,14 +54,14 @@ fn main() {
         let time = std::time::Instant::now();
         //fino a qui tutto uguale a prima
 
-        //uso un'altro modulo della libreria, uso faer...::cholesky al posto di solve
+        //uso un'altro modulo della libreria, uso faer...::cholesky al posto di ::solve
         //calcolo matrice simbolica della fattorizzazione cholesky
         let symbolic_cholesky = cholesky::factorize_symbolic_cholesky(
             symbolic_mat.as_ref(),
             Side::Lower,
-            SymmetricOrdering::Amd, // parametri di default che devo passare
-            CholeskySymbolicParams::default(), //parametri di default che devo passare
-        ).expect("errore in simbolycChol");
+            SymmetricOrdering::Amd, // parametri di default
+            CholeskySymbolicParams::default(), //parametri di default
+        ).expect("errore in simbolyc_cholesky");
 
         //dopo aver calcolato la matrice simbolica devo calcolare i valori per riempirla
         
@@ -76,37 +73,42 @@ fn main() {
         let regularization = LltRegularization::default();
         let llt_params = Default::default();
 
-        // workspace
-        let req = symbolic_cholesky.factorize_numeric_llt_scratch(par, llt_params);
+        //Per funzionare ha bisogno di uno stack di memoria (penso per farci le operazioni sopra bho)
+        let req = symbolic_cholesky.factorize_numeric_llt_scratch(par, llt_params); //funzione che calcola la memoria dello stack
         let mut stack_buf = MemBuffer::new(req);
         let mut stack = MemStack::new(&mut stack_buf);
 
+        //funzione che calcola effettivamente i valori della matrice
         let factor = symbolic_cholesky.factorize_numeric_llt(
-            &mut l_values,
-            matrix_faer.as_ref(),
-            Side::Lower,
-            regularization,
-            par,
-            &mut stack,
-            llt_params,
-        ).expect("err in numericFactorize");
+            &mut l_values, //buffer di prima
+            matrix_faer.as_ref(), //matrice originale
+            Side::Lower, //parametri di default
+            regularization, //parametri di default
+            par, //parametri di default
+            &mut stack, //stack di prima 
+            llt_params, //parametri di default
+        ).expect("errore in numeric_factorize");
+        
+        //ora abbiamo la matrice fattorizzata, passiamo alla risoluzione del sistema
 
-       // stack
-        let req = symbolic_cholesky.solve_in_place_scratch::<f64>(1, Par::Seq);
+        //per risolvere il sistema serve, come prima, anche per la risoluzione uno stack di memoria
+        let req = symbolic_cholesky.solve_in_place_scratch::<f64>(1, Par::Seq); //funzione che calcola la memoria per la risoluzione
         let mut stack_buf = MemBuffer::new(req);
         let mut stack = MemStack::new(&mut stack_buf);
 
         factor.solve_in_place_with_conj(
-            Conj::No,
-            b.as_mut(),
-            Par::Seq,
-            &mut stack,
+            Conj::No, //riguarda matrici di numeri complesso quindi mettiamo NO
+            b.as_mut(), //vettore soluzione, viene modificato in place e diventerà il nostro vettore x
+            Par::Seq, //parametri di default
+            &mut stack, //stack di prima
         );
 
-        let x = b;
         
+        //da qui in poi tutto uguale a prima
         let elapsed = time.elapsed();
         let mem_dopo = ALLOCATOR.allocated();
+
+        let x = b; //rinomino per comodità
 
         let diff = &x - &xe;
         let rel_error = diff.norm_l2() / xe.norm_l2();
