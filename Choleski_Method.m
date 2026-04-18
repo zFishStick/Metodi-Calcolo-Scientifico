@@ -25,22 +25,25 @@ for i = 1 : length(matrix_names)
     disp(['Nome matrice: ' , matrix_names{i}])
     disp([ 'Dimensione matrice : ' ,num2str(size(A,1)), 'x' ,num2str(size(A,2))]);
     
-    xe = ones(length(A), 1); % Vettore con tutti 1
     
+    %solo calcolo della memoria
     mem_prima = whos('A');
-    b = A * xe;
- 
+    L = decomposition(A, 'chol');
+    mem_dopo = whos('L').bytes;
+    clear L;
 
+    xe = ones(length(A), 1); % Vettore con tutti 1
+    b = A * xe;
+    
     % Tempo
     tic
-    dA = decomposition(A, 'chol');
-    x = dA \ b;
+    x = A \ b;
     t = toc;
     
     % Errore
     rel_err = norm(x - xe)/norm(xe);
     
-    mem_dopo = whos('dA').bytes + whos('x').bytes;
+    mem_dopo = mem_dopo + whos('x').bytes;
     mem_MB = (mem_dopo - mem_prima.bytes) / 1024^2;
 
     nomi{end+1} = matrix_names{i};
@@ -50,7 +53,7 @@ for i = 1 : length(matrix_names)
     memorie(end+1) = mem_MB;
 
     %libero la memoria just to be sure
-    clear dA x;
+    clear x;
 end
 
 if ispc
