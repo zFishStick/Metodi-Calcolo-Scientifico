@@ -17,8 +17,11 @@ static ALLOCATOR: Cap<System> = Cap::new(System, usize::MAX);
 fn main() {
     //let folder = "C://Users//gabri//OneDrive//Desktop//matrici";
 
-    let folder = "C:\\Users\\Simone\\Desktop\\Università\\Magistrale\\Metodi del calcolo scientifico\\Progetto1\\matrici_mtx";
-
+    let folder = if cfg!(target_os = "windows") {
+            "C:\\Users\\Simone\\Desktop\\Università\\Magistrale\\Metodi del calcolo scientifico\\Progetto1\\matrici_mtx";
+        } else {
+            "/home/diagon/Matrici-mtx";
+        };
     // let matrix_list = [
     //     "Flan_1565", "StocF-1465", "cfd2", "cfd1", "G3_circuit",
     //     "parabolic_fem", "apache2", "shallow_water1", "ex15",
@@ -73,9 +76,13 @@ fn main() {
         println!("Memoria allocata: {} MB", aumento_memoria / (1024.0 * 1024.0));
         println!("Errore relativo: {:e}", rel_error);
         println!("Tempo di esecuzione: {:.2?}", elapsed);
-
+        let ris_csv = if cfg!(target_os = "windows") {
+            "risultati_win_rust.csv"
+        } else {
+            "risultati_linux_rust.csv"
+        };
         write_results_csv(
-            "risultati_rust.csv",
+            ris_csv,
             name,
             matrix_sprs.cols(),
             elapsed.as_secs_f64(),
