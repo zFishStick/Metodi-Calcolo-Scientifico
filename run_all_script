@@ -1,0 +1,27 @@
+#!/bin/bash
+
+echo "=== INIZIO PIPELINE DI TEST PERFORMANCE ==="
+
+# JULIA
+echo "--> Avvio Test Julia..."
+julia script_julia.jl
+echo "Julia completato. RAM liberata."
+sleep 5
+
+# MATLAB
+#echo "--> Avvio Test Matlab..."
+#matlab -batch choleski_method.m
+#echo "Matlab completato. RAM liberata."
+#sleep 5
+
+# RUST
+echo "--> Compilazione Rust in modalità Release..."
+cd rust
+cargo build --release
+
+echo "--> Avvio Test Rust..."
+./target/release/main.exe
+cd ..
+echo "Rust completato. RAM liberata."
+
+echo "=== TUTTI I TEST SONO STATI COMPLETATI! ==="
