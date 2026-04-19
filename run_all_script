@@ -4,7 +4,7 @@ echo "=== INIZIO PIPELINE DI TEST PERFORMANCE ==="
 
 # JULIA
 echo "--> Avvio Test Julia..."
-julia script_julia.jl
+julia choleski_method.jl
 echo "Julia completato. RAM liberata."
 sleep 5
 
@@ -20,7 +20,7 @@ cd rust
 cargo build --release
 
 echo "--> Avvio Test Rust..."
-./target/release/main.exe
+./target/release/rust.exe
 cd ..
 echo "Rust completato. RAM liberata."
 
