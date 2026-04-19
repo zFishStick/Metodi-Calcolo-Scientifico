@@ -5,7 +5,11 @@ using CSV, DataFrames
 
 function cholesky_decomposition()
 
-    folder = "C:\\Users\\Diagon\\Desktop\\UNIMIB\\ANNO 1\\SECONDO SEMESTRE\\Metodi Calcolo\\Matrici-Sparse"
+    if Sys.iswindows()
+        folder = "C:\\Users\\Diagon\\Desktop\\UNIMIB\\ANNO 1\\SECONDO SEMESTRE\\Metodi Calcolo\\Matrici-Sparse";
+    else
+        folder = "/home/diagon/Matrici-Sparse";
+    end
     #folder = "matrici\\"
     files = readdir(folder)
     matrici = []
@@ -15,7 +19,13 @@ function cholesky_decomposition()
     memorie = []
     for f in files
         data = matread(joinpath(folder, f))
-        push!(matrici, (data["Problem"]["A"], data["Problem"]["name"]))
+        if !Sys.iswindows() && f == "Flan_1565.mat"
+            println("Salto $f: troppo grande per la RAM disponibile (26GB/16GB swap).")
+            continue
+        else
+            push!(matrici, (data["Problem"]["A"], data["Problem"]["name"]))
+        end
+        
     end
 
 

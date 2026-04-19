@@ -2,9 +2,13 @@
 
 
 matrix_names = {'ex15.mat', 'apache2.mat', 'cfd1.mat', 'cfd2.mat', 'Flan_1565.mat', 'G3_circuit.mat', 'parabolic_fem.mat', 'shallow_water1.mat', 'StocF-1465.mat'};
-folder = "C:\Users\Diagon\Desktop\UNIMIB\ANNO 1\SECONDO SEMESTRE\Metodi Calcolo\Matrici-Sparse";
 %folder = "C:\Users\Simone\Desktop\Università\Magistrale\Metodi del calcolo scientifico\Progetto1\matrici";
-%matrix_names = {'ex15.mat', 'shallow_water1.mat', 'Flan_1565.mat'};
+
+if Sys.iswindows()
+    folder = "C:\\Users\\Diagon\\Desktop\\UNIMIB\\ANNO 1\\SECONDO SEMESTRE\\Metodi Calcolo\\Matrici-Sparse";
+else
+    folder = "/home/diagon/Matrici-Sparse";
+end
 
 nomi = {};
 dimensioni = [];
