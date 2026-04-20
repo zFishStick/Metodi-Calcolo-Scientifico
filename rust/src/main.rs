@@ -27,11 +27,7 @@ fn main() {
         } else {
             "/home/diagon/Matrici-mtx";
         };
-    // let matrix_list = [
-    //     "Flan_1565", "StocF-1465", "cfd2", "cfd1", "G3_circuit",
-    //     "parabolic_fem", "apache2", "shallow_water1", "ex15",
-    // ];
-
+  
     let matrix_list = ["apache2", "ex15", "cfd2", "cfd1", "parabolic_fem", "shallow_water1", "G3_circuit", "Flan_1565", "StocF-1465"];
     
     for name in matrix_list {
@@ -125,6 +121,7 @@ fn main() {
         println!("Memoria allocata: {} MB", aumento_memoria / (1024.0 * 1024.0));
         println!("Errore relativo: {:e}", rel_error);
         println!("Tempo di esecuzione: {:.2?}", elapsed);
+
         let ris_csv = if cfg!(target_os = "windows") {
             "risultati_win_rust.csv"
         } else {
