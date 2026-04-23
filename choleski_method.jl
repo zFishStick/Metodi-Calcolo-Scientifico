@@ -19,7 +19,7 @@ function cholesky_decomposition()
     memorie = []
     for f in files
         data = matread(joinpath(folder, f))
-        if !Sys.iswindows() && f == "Flan_1565.mat"
+        if !Sys.iswindows() && f == "Flan_1565.mat" && false
             println("Salto $f: troppo grande per la RAM disponibile (26GB/16GB swap).")
             continue
         else

@@ -20,12 +20,12 @@ static ALLOCATOR: Cap<System> = Cap::new(System, usize::MAX);
 
 fn main() {
     
-    let folder = "C:\\Users\\Diagon\\Desktop\\UNIMIB\\ANNO 1\\SECONDO SEMESTRE\\Metodi Calcolo\\Matrici-mtx";
+    //let folder = "C:\\Users\\Simone\\Desktop\\Università\\Magistrale\\Metodi del calcolo scientifico\\Progetto1\\matrici_mtx";
 
     let folder = if cfg!(target_os = "windows") {
-            "C:\\Users\\Simone\\Desktop\\Università\\Magistrale\\Metodi del calcolo scientifico\\Progetto1\\matrici_mtx";
+            "C:\\Users\\Diagon\\Desktop\\UNIMIB\\ANNO 1\\SECONDO SEMESTRE\\Metodi Calcolo\\Matrici-mtx"
         } else {
-            "/home/diagon/Matrici-mtx";
+            "/home/diagon/Matrici-mtx"
         };
   
     let matrix_list = ["apache2", "ex15", "cfd2", "cfd1", "parabolic_fem", "shallow_water1", "G3_circuit", "Flan_1565", "StocF-1465"];

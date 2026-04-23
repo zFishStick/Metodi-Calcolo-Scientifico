@@ -2,6 +2,13 @@
 
 echo "=== INIZIO PIPELINE DI TEST PERFORMANCE ==="
 
+# RUST
+echo "--> Avvio Test Rust..."
+cd rust
+cargo run --release
+echo "Rust completato. RAM liberata."
+
+
 # JULIA
 echo "--> Avvio Test Julia..."
 julia choleski_method.jl
@@ -9,19 +16,10 @@ echo "Julia completato. RAM liberata."
 sleep 5
 
 # MATLAB
-#echo "--> Avvio Test Matlab..."
-#matlab -batch choleski_method.m
-#echo "Matlab completato. RAM liberata."
-#sleep 5
+echo "--> Avvio Test Matlab..."
+matlab -batch choleski_method.m
+echo "Matlab completato. RAM liberata."
+sleep 5
 
-# RUST
-echo "--> Compilazione Rust in modalità Release..."
-cd rust
-cargo build --release
-
-echo "--> Avvio Test Rust..."
-./target/release/rust.exe
-cd ..
-echo "Rust completato. RAM liberata."
 
 echo "=== TUTTI I TEST SONO STATI COMPLETATI! ==="
