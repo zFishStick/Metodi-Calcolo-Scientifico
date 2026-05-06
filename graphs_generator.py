@@ -1,9 +1,13 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 
-df_rust = pd.read_csv(r"C:\Users\Diagon\Desktop\Progetti\Metodi-Calcolo-Scientifico\rust\risultati_rust.csv").sort_values("dimensione")
-df_matlab = pd.read_csv("risultati_win_matlab.csv").sort_values("dimensione")
-df_julia = pd.read_csv("risultati_win_julia.csv").sort_values("dimensione")
+#df_rust = pd.read_csv(r"C:\Users\Diagon\Desktop\Progetti\Metodi-Calcolo-Scientifico\rust\risultati_rust.csv").sort_values("dimensione")
+#df_matlab = pd.read_csv("risultati_win_matlab.csv").sort_values("dimensione")
+#df_julia = pd.read_csv("risultati_win_julia.csv").sort_values("dimensione")
+
+df_rust = pd.read_csv(r"C:\Users\Diagon\Desktop\Progetti\Metodi-Calcolo-Scientifico\rust\risultati_linux_rust.csv").sort_values("dimensione")
+df_matlab = pd.read_csv("risultati_linux_matlab.csv").sort_values("dimensione")
+df_julia = pd.read_csv("risultati_linux_julia.csv").sort_values("dimensione")
 
 # TEMPO x DIMENSIONE
 plt.figure()
@@ -14,7 +18,7 @@ plt.plot(df_julia["dimensione"], df_julia["tempo"], marker='^', label="Julia")
 plt.xlabel("Dimensione matrice")
 plt.ylabel("Tempo (s)")
 plt.title("Tempo vs Dimensione")
-plt.xscale("log")
+
 plt.yscale("log")
 plt.grid()
 plt.legend()
@@ -29,7 +33,7 @@ plt.plot(df_julia["dimensione"], df_julia["errore"], marker='^', label="Julia")
 plt.xlabel("Dimensione matrice")
 plt.ylabel("Errore relativo")
 plt.title("Errore vs Dimensione")
-plt.xscale("log")
+
 plt.yscale("log")
 plt.grid()
 plt.legend()

@@ -133,7 +133,7 @@ fn main() {
             matrix_sprs.cols(),
             elapsed.as_secs_f64(),
             rel_error,
-            aumento_memoria
+            aumento_memoria / (1024.0 * 1024.0)
         );
 
     }
